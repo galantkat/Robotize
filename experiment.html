@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Robotize – Free Emissions Estimate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #08111f;
+      --bg-card: #0d1e30;
+      --bg-card-alt: #0f2238;
+      --accent: #1e7ca8;
+      --accent-bright: #2fa3d8;
+      --text: #e8eef5;
+      --text-muted: #7a94aa;
+      --text-dim: #4a6070;
+      --border: rgba(255,255,255,0.07);
+      --border-active: rgba(30,124,168,0.5);
+      --font-head: "Bebas Neue", sans-serif;
+      --font-body: "Inter", sans-serif;
+      --red: #e05252;
+      --amber: #e09a2f;
+      --green: #38b27a;
+      --t: 0.2s ease;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 64px; background: rgba(8,17,31,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: var(--font-head); font-size: 22px; letter-spacing: 0.06em; color: var(--text); text-decoration: none; }
+    .nav-back { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    .hero { padding: 120px 40px 48px; max-width: 860px; margin: 0 auto; text-align: center; }
+    .hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 16px; }
+    .hero-title { font-family: var(--font-head); font-size: clamp(40px, 6vw, 66px); line-height: 1.0; letter-spacing: 0.02em; margin-bottom: 18px; }
+    .hero-title span { color: var(--accent-bright); }
+    .hero-sub { font-size: 17px; color: var(--text-muted); max-width: 580px; margin: 0 auto 28px; line-height: 1.75; }
+    .trust-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 44px; }
+    .trust-pill { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; }
+    .trust-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+    .progress-wrap { max-width: 760px; margin: 0 auto 28px; padding: 0 40px; }
+    .progress-nav { display: flex; align-items: center; }
+    .progress-step { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .progress-step:not(:last-child)::after { content: ''; flex: 1; height: 1px; background: var(--border); margin: 0 10px; }
+    .progress-step.done:not(:last-child)::after { background: var(--accent); }
+    .step-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; transition: all var(--t); background: var(--bg); }
+    .progress-step.active .step-dot { border-color: var(--accent-bright); color: var(--accent-bright); background: rgba(30,124,168,0.1); }
+    .progress-step.done .step-dot { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .step-label-text { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
+    .progress-step.active .step-label-text { color: var(--accent-bright); }
+    .progress-step.done .step-label-text { color: var(--text-muted); }
+
+    .steps-wrap { max-width: 760px; margin: 0 auto; padding: 0 40px 100px; }
+    .step-card { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 40px; animation: fadeUp 0.3s ease forwards; }
+    .step-card.active { display: block; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 6px; }
+    .card-title { font-family: var(--font-head); font-size: 30px; letter-spacing: 0.03em; color: var(--text); margin-bottom: 6px; }
+    .card-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.65; }
+
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .field-grid.single { grid-template-columns: 1fr; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+    .field label { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); }
+    .field input, .field select { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; font-size: 15px; font-family: var(--font-body); color: var(--text); outline: none; transition: border-color var(--t), background var(--t), opacity var(--t); -webkit-appearance: none; appearance: none; width: 100%; }
+    .field input:focus, .field select:focus { border-color: var(--border-active); background: rgba(30,124,168,0.06); }
+    .field select option { background: #12243a; color: var(--text); }
+    .field input::placeholder { color: var(--text-dim); }
+    .field-hint { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+    /* DON'T KNOW TOGGLE */
+    .dk-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-dim); cursor: pointer; user-select: none; white-space: nowrap; flex-shrink: 0; transition: color var(--t); padding: 3px 0; }
+    .dk-toggle:hover { color: var(--amber); }
+    .dk-box { width: 14px; height: 14px; border: 1.5px solid var(--text-dim); border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--t); }
+    .dk-toggle.checked .dk-box { border-color: var(--amber); background: rgba(224,154,47,0.15); }
+    .dk-toggle.checked { color: var(--amber); }
+    .dk-tick { display: none; font-size: 9px; color: var(--amber); font-weight: 800; line-height: 1; }
+    .dk-toggle.checked .dk-tick { display: block; }
+
+    .field.dk-active input,
+    .field.dk-active select { opacity: 0.25; pointer-events: none; }
+    .dk-note { display: none; font-size: 11px; color: rgba(224,154,47,0.8); font-style: italic; margin-top: 2px; line-height: 1.5; }
+    .field.dk-active .dk-note { display: block; }
+    .field.dk-active .field-hint { display: none; }
+
+    .info-banner { display: flex; align-items: flex-start; gap: 12px; background: rgba(30,124,168,0.08); border: 1px solid rgba(30,124,168,0.2); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.55; }
+    .info-banner .icon { color: var(--accent-bright); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+    .scope-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .scope-tag { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; transition: all var(--t); user-select: none; }
+    .scope-tag:hover, .scope-tag.selected { border-color: var(--accent-bright); color: var(--accent-bright); background: rgba(30,124,168,0.1); }
+    .method-note { font-size: 11px; color: var(--text-dim); font-style: italic; margin-top: 8px; }
+
+    .step-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; border-top: 1px solid var(--border); padding-top: 22px; }
+    .btn-back { font-size: 14px; font-weight: 600; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 10px 0; transition: color var(--t); font-family: var(--font-body); }
+    .btn-back:hover { color: var(--text-muted); }
+    .btn-next { font-family: var(--font-body); font-size: 15px; font-weight: 700; color: #fff; background: var(--accent); border: none; border-radius: 8px; padding: 13px 28px; cursor: pointer; transition: background var(--t), transform var(--t); }
+    .btn-next:hover { background: var(--accent-bright); transform: translateY(-1px); }
+
+    #resultsCard { display: none; }
+    #resultsCard.active { display: block; }
+    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 24px 0; }
+    .result-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 20px 16px; text-align: center; }
+    .result-box.primary { border-color: rgba(30,124,168,0.4); background: rgba(30,124,168,0.07); }
+    .result-value { font-family: var(--font-head); font-size: 36px; letter-spacing: 0.02em; color: var(--text); line-height: 1; }
+    .result-box.primary .result-value { color: var(--accent-bright); font-size: 42px; }
+    .result-unit { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .result-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+    .result-note { font-size: 10px; color: var(--amber); margin-top: 5px; font-style: italic; }
+
+    .gap-result-banner { background: rgba(224,154,47,0.06); border: 1px solid rgba(224,154,47,0.2); border-radius: 10px; padding: 16px 18px; margin: 4px 0 16px; font-size: 13px; color: rgba(224,154,47,0.85); line-height: 1.65; }
+    .gap-result-banner strong { color: var(--amber); display: block; margin-bottom: 4px; }
+
+    .reduction-section { margin: 18px 0; }
+    .reduction-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 9px; }
+    .reduction-bar-track { height: 7px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+    .reduction-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+    .reduction-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); }
+
+    .ux-rating-section { background: var(--bg-card-alt); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0; }
+    .ux-rating-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .rating-question { font-size: 15px; color: var(--text); margin-bottom: 13px; font-weight: 500; }
+    .rating-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .rating-btn { font-size: 13px; font-weight: 600; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--text-dim); cursor: pointer; transition: all var(--t); font-family: var(--font-body); }
+    .rating-btn:hover, .rating-btn.selected { border-color: var(--accent-bright); color: var(--accent-bright); background: rgba(30,124,168,0.1); }
+    .open-feedback { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 14px; font-family: var(--font-body); color: var(--text); resize: vertical; min-height: 68px; outline: none; transition: border-color var(--t); }
+    .open-feedback:focus { border-color: var(--border-active); }
+    .open-feedback::placeholder { color: var(--text-dim); }
+
+    .email-capture { background: rgba(30,124,168,0.07); border: 1px solid rgba(30,124,168,0.2); border-radius: 10px; padding: 24px; margin: 18px 0; }
+    .email-capture-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .email-capture-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+    .email-row { display: flex; gap: 10px; }
+    .email-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 15px; font-family: var(--font-body); color: var(--text); outline: none; transition: border-color var(--t); }
+    .email-row input:focus { border-color: var(--border-active); }
+    .email-row input::placeholder { color: var(--text-dim); }
+    .btn-submit { font-family: var(--font-body); font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); border: none; border-radius: 8px; padding: 12px 22px; cursor: pointer; white-space: nowrap; transition: background var(--t); }
+    .btn-submit:hover { background: var(--accent-bright); }
+    .success-state { display: none; align-items: center; gap: 12px; padding: 16px; background: rgba(56,178,122,0.1); border: 1px solid rgba(56,178,122,0.3); border-radius: 10px; font-size: 14px; color: var(--green); font-weight: 600; }
+
+    .disclaimer { font-size: 11px; color: var(--text-dim); margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); line-height: 1.6; text-align: center; }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); max-width: 860px; margin: 0 auto; }
+    .footer-logo { font-family: var(--font-head); font-size: 16px; letter-spacing: 0.06em; color: var(--text-muted); }
+
+    @media (max-width: 640px) {
+      .hero { padding: 100px 20px 36px; }
+      .steps-wrap, .progress-wrap { padding: 0 20px 80px; }
+      nav { padding: 0 20px; }
+      .field-grid { grid-template-columns: 1fr; }
+      .results-grid { grid-template-columns: 1fr; }
+      .step-card { padding: 22px 18px; }
+      .progress-step .step-label-text { display: none; }
+      .email-row { flex-direction: column; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ROBOTIZE</a>
+  <span class="nav-back"><a href="index.html" style="color:var(--text-muted); text-decoration:none;">Back to main site</a></span>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Free - Takes 3 Minutes</div>
+  <h1 class="hero-title">See Your Carbon Footprint<br/><span>Before Your Auditor Does</span></h1>
+  <p class="hero-sub">Enter what you know about your operations. Robotize estimates your Scope 1, 2, and 3 emissions instantly - no consultant, no supplier surveys, no commitment required.</p>
+  <div class="trust-row">
+    <div class="trust-pill"><span class="dot"></span>DEFRA 2024 emission factors</div>
+    <div class="trust-pill"><span class="dot"></span>GHG Protocol methodology</div>
+    <div class="trust-pill"><span class="dot"></span>SECR-aligned output</div>
+    <div class="trust-pill"><span class="dot"></span>No account required</div>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-nav">
+    <div class="progress-step active" id="pStep1">
+      <div class="step-dot">1</div>
+      <span class="step-label-text">Your Business</span>
+    </div>
+    <div class="progress-step" id="pStep2">
+      <div class="step-dot">2</div>
+      <span class="step-label-text">Energy &amp; Fuel</span>
+    </div>
+    <div class="progress-step" id="pStep3">
+      <div class="step-dot">3</div>
+      <span class="step-label-text">Supply Chain</span>
+    </div>
+  </div>
+</div>
+
+<div class="steps-wrap">
+
+  <!-- STEP 1 -->
+  <div class="step-card active" id="step1">
+    <div class="card-label">Step 1 of 3</div>
+    <div class="card-title">Tell Us About Your Business</div>
+    <p class="card-desc">This helps us apply the right emission factors for your industry. Don't worry if you can't answer everything - tick "I don't have this" and we'll work around it.</p>
+
+    <div class="field-grid">
+      <div class="field">
+        <div class="field-top"><label for="companyName">Company Name</label></div>
+        <input type="text" id="companyName" placeholder="e.g. Midlands Components Ltd" />
+      </div>
+
+      <div class="field" id="f-sector">
+        <div class="field-top">
+          <label for="sector">Industry Sector</label>
+          <span class="dk-toggle" id="dk-sector" onclick="toggleDK('f-sector','dk-sector')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't know
+          </span>
+        </div>
+        <select id="sector">
+          <option value="">Select sector…</option>
+          <option value="manufacturing_metal">Metal / Steel Manufacturing</option>
+          <option value="manufacturing_food">Food &amp; Beverage Manufacturing</option>
+          <option value="manufacturing_chem">Chemical Manufacturing</option>
+          <option value="manufacturing_auto">Automotive Manufacturing</option>
+          <option value="manufacturing_other">Other Manufacturing</option>
+          <option value="logistics">Logistics &amp; Warehousing</option>
+          <option value="construction">Construction</option>
+        </select>
+        <span class="field-hint">Determines which emission factors apply to your operations</span>
+        <span class="dk-note">We'll use average UK manufacturing factors as a fallback.</span>
+      </div>
+
+      <div class="field" id="f-employees">
+        <div class="field-top">
+          <label for="employees">Number of Employees</label>
+          <span class="dk-toggle" id="dk-employees" onclick="toggleDK('f-employees','dk-employees')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="employees" placeholder="e.g. 450" min="1" />
+        <span class="field-hint">Used to estimate commuting and office-related emissions</span>
+        <span class="dk-note">We'll skip employee-related Scope 3 categories - no problem.</span>
+      </div>
+
+      <div class="field" id="f-turnover">
+        <div class="field-top">
+          <label for="turnover">Annual Turnover (£m)</label>
+          <span class="dk-toggle" id="dk-turnover" onclick="toggleDK('f-turnover','dk-turnover')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="turnover" placeholder="e.g. 28" min="0" step="0.1" />
+        <span class="field-hint">Helps us benchmark your footprint against sector peers</span>
+        <span class="dk-note">No problem - we'll omit intensity comparisons from your report.</span>
+      </div>
+    </div>
+
+    <div class="info-banner">
+      <span class="icon">&#9432;</span>
+      <span>Not sure about some fields? That's completely normal. Tick "I don't have this" for anything you can't answer - you'll still get a useful emissions estimate. We'll flag what's missing so you know what to collect next.</span>
+    </div>
+
+    <div class="step-actions">
+      <span></span>
+      <button class="btn-next" onclick="goToStep(2)">Continue &#8594;</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-card" id="step2">
+    <div class="card-label">Step 2 of 3</div>
+    <div class="card-title">Energy &amp; Fuel Use</div>
+    <p class="card-desc">These figures calculate your Scope 1 (direct combustion) and Scope 2 (electricity) emissions - the part most companies report first. Check last year's energy bills or ask your facilities manager. Approximate figures are fine.</p>
+
+    <div class="field-grid">
+      <div class="field" id="f-electricity">
+        <div class="field-top">
+          <label for="electricity">Grid Electricity (MWh/yr)</label>
+          <span class="dk-toggle" id="dk-electricity" onclick="toggleDK('f-electricity','dk-electricity')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="electricity" placeholder="e.g. 3,400" min="0" />
+        <span class="field-hint">From your energy bills or smart meter - or ask your facilities team</span>
+        <span class="dk-note">We'll estimate from your sector average and flag this as a gap.</span>
+      </div>
+
+      <div class="field" id="f-naturalGas">
+        <div class="field-top">
+          <label for="naturalGas">Natural Gas (MWh/yr)</label>
+          <span class="dk-toggle" id="dk-naturalGas" onclick="toggleDK('f-naturalGas','dk-naturalGas')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="naturalGas" placeholder="e.g. 1,200" min="0" />
+        <span class="field-hint">Convert cubic metres using: m&#179; &times; 10.55 = MWh</span>
+        <span class="dk-note">We'll flag this gap and use a sector ratio estimate instead.</span>
+      </div>
+
+      <div class="field" id="f-diesel">
+        <div class="field-top">
+          <label for="diesel">Diesel / HVO (litres/yr)</label>
+          <span class="dk-toggle" id="dk-diesel" onclick="toggleDK('f-diesel','dk-diesel')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="diesel" placeholder="e.g. 24,000" min="0" />
+        <span class="field-hint">Company vehicles, generators, forklifts - check fuel card statements</span>
+        <span class="dk-note">We'll estimate from sector benchmarks or exclude if not applicable.</span>
+      </div>
+
+      <div class="field" id="f-refrigerants">
+        <div class="field-top">
+          <label for="refrigerants">Refrigerant Top-ups (kg/yr)</label>
+          <span class="dk-toggle" id="dk-refrigerants" onclick="toggleDK('f-refrigerants','dk-refrigerants')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>Not applicable / don't know
+          </span>
+        </div>
+        <input type="number" id="refrigerants" placeholder="e.g. 12" min="0" />
+        <span class="field-hint">HVAC systems, cold storage, food processing - check engineer service records</span>
+        <span class="dk-note">We'll assume zero. Update this later once you've checked maintenance logs.</span>
+      </div>
+    </div>
+
+    <div class="info-banner">
+      <span class="icon">&#128274;</span>
+      <span>Robotize applies DEFRA 2024 conversion factors automatically. You don't need to know the science - just provide the activity data and we handle the rest. Estimates are clearly flagged in your results.</span>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-back" onclick="goToStep(1)">&#8592; Back</button>
+      <button class="btn-next" onclick="goToStep(3)">Continue &#8594;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-card" id="step3">
+    <div class="card-label">Step 3 of 3</div>
+    <div class="card-title">Supply Chain &amp; Operations</div>
+    <p class="card-desc">Scope 3 typically represents 92% of a manufacturer's total footprint - and it's the hardest to measure. Enter what you have. We estimate the rest from your operational profile, with no supplier surveys required.</p>
+
+    <div class="field-grid">
+      <div class="field" id="f-procurement">
+        <div class="field-top">
+          <label for="procurement">Annual Procurement Spend (&#163;000s)</label>
+          <span class="dk-toggle" id="dk-procurement" onclick="toggleDK('f-procurement','dk-procurement')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="procurement" placeholder="e.g. 4,200" min="0" />
+        <span class="field-hint">Total spend on goods and raw materials - from finance team or management accounts</span>
+        <span class="dk-note">This is often the biggest Scope 3 driver. We'll estimate from turnover if available and flag it clearly.</span>
+      </div>
+
+      <div class="field" id="f-freight">
+        <div class="field-top">
+          <label for="freight">Outbound Freight (tonne-km/yr)</label>
+          <span class="dk-toggle" id="dk-freight" onclick="toggleDK('f-freight','dk-freight')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="freight" placeholder="e.g. 850,000" min="0" />
+        <span class="field-hint">Estimate: tonnes shipped per year &times; average delivery distance in km</span>
+        <span class="dk-note">We'll estimate from sector logistics benchmarks for your industry.</span>
+      </div>
+
+      <div class="field" id="f-businessTravel">
+        <div class="field-top">
+          <label for="businessTravel">Business Travel (&#163;/yr)</label>
+          <span class="dk-toggle" id="dk-businessTravel" onclick="toggleDK('f-businessTravel','dk-businessTravel')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="businessTravel" placeholder="e.g. 35,000" min="0" />
+        <span class="field-hint">Flights, rail, hotel stays - check with your finance or HR team</span>
+        <span class="dk-note">We'll use a headcount-based estimate or skip this category.</span>
+      </div>
+
+      <div class="field" id="f-waste">
+        <div class="field-top">
+          <label for="waste">Waste to Landfill (tonnes/yr)</label>
+          <span class="dk-toggle" id="dk-waste" onclick="toggleDK('f-waste','dk-waste')">
+            <span class="dk-box"><span class="dk-tick">&#10003;</span></span>I don't have this
+          </span>
+        </div>
+        <input type="number" id="waste" placeholder="e.g. 48" min="0" />
+        <span class="field-hint">From waste contractor invoices or your site or facilities manager</span>
+        <span class="dk-note">We'll apply sector-typical waste intensity ratios as an estimate.</span>
+      </div>
+    </div>
+
+    <div class="field-grid single">
+      <div class="field">
+        <div class="field-top">
+          <label>Which Scope 3 categories apply to your business? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(select all that apply)</span></label>
+        </div>
+        <div class="scope-tags" id="scopeTags">
+          <span class="scope-tag selected" data-val="purchased_goods">Purchased Goods</span>
+          <span class="scope-tag" data-val="capital_goods">Capital Goods</span>
+          <span class="scope-tag selected" data-val="upstream_transport">Upstream Transport</span>
+          <span class="scope-tag selected" data-val="waste">Waste</span>
+          <span class="scope-tag" data-val="business_travel">Business Travel</span>
+          <span class="scope-tag selected" data-val="downstream_transport">Downstream Transport</span>
+          <span class="scope-tag" data-val="use_of_product">Use of Product</span>
+          <span class="scope-tag" data-val="end_of_life">End of Life Treatment</span>
+        </div>
+      <p class="method-note">Not sure? Leave the defaults - we've pre-selected the most common categories for UK manufacturers. You can refine later.</p>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-back" onclick="goToStep(2)">&#8592; Back</button>
+      <button class="btn-next" onclick="calculateResults()">Calculate My Footprint &#8594;</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="step-card" id="resultsCard">
+    <div class="card-label">Your Indicative Emissions Baseline</div>
+    <div class="card-title">Results</div>
+    <p class="card-desc">Based on the data you provided, using DEFRA 2024 emission factors and GHG Protocol methodology. Fields marked as unknown are either estimated from benchmarks or excluded - we flag which below.</p>
+
+    <div id="gapBanner" class="gap-result-banner" style="display:none">
+      <strong>Data gaps detected in your estimate</strong>
+      <span id="gapList"></span> These categories are estimated from sector benchmarks or excluded. Your full Robotize report will show exactly what data to collect to improve accuracy and move from indicative to audit-grade.
+    </div>
+
+    <div class="results-grid">
+      <div class="result-box">
+        <div class="result-value" id="scope1Val">-</div>
+        <div class="result-unit">tCO2e</div>
+        <div class="result-label">Scope 1<br/>Direct combustion &amp; fugitives</div>
+        <div class="result-note" id="s1note"></div>
+      </div>
+      <div class="result-box primary">
+        <div class="result-value" id="totalVal">-</div>
+        <div class="result-unit">tCO2e total</div>
+        <div class="result-label">Total Footprint<br/>Scope 1 + 2 + 3 combined</div>
+      </div>
+      <div class="result-box">
+        <div class="result-value" id="scope2Val">-</div>
+        <div class="result-unit">tCO2e</div>
+        <div class="result-label">Scope 2<br/>Purchased electricity</div>
+        <div class="result-note" id="s2note"></div>
+      </div>
+    </div>
+
+    <div class="reduction-section">
+      <div class="reduction-header">
+        <span>Scope 3 Share of Total</span>
+        <span id="scope3Pct">-</span>
+      </div>
+      <div class="reduction-bar-track">
+        <div class="reduction-bar-fill" id="scope3Bar" style="width:0%; background: var(--accent-bright);"></div>
+      </div>
+      <div class="reduction-labels">
+        <span>Scope 1+2</span>
+        <span id="scope3Val">-</span>
+      </div>
+    </div>
+
+    <div class="reduction-section">
+      <div class="reduction-header">
+        <span>SBTi 1.5&#176;C Pathway - Required Reduction by 2030</span>
+        <span style="color:var(--amber)">&#8722;42%</span>
+      </div>
+      <div class="reduction-bar-track">
+        <div class="reduction-bar-fill" id="reductionBar" style="width:0%; background: linear-gradient(90deg, var(--green), var(--amber));"></div>
+      </div>
+      <div class="reduction-labels">
+        <span>Current baseline</span>
+        <span id="targetVal">-</span>
+      </div>
+    </div>
+
+    <div class="ux-rating-section">
+      <div class="ux-rating-title">Help Us Improve</div>
+      <p class="rating-question">How easy was it to find the data we asked for?</p>
+      <div class="rating-options">
+        <button class="rating-btn" onclick="selectRating(this,1)">Couldn't find most of it</button>
+        <button class="rating-btn" onclick="selectRating(this,2)">Found some, not all</button>
+        <button class="rating-btn" onclick="selectRating(this,3)">Found most of it</button>
+        <button class="rating-btn" onclick="selectRating(this,4)">Found everything easily</button>
+      </div>
+      <textarea class="open-feedback" id="openFeedback" placeholder="Which data was hardest to find? What would have helped? (optional - your feedback shapes the product)"></textarea>
+    </div>
+
+    <div class="email-capture">
+      <div class="email-capture-title">Get Your Full Report - Free</div>
+      <div class="email-capture-sub">We'll send you a detailed breakdown: Scope 3 category split, SECR compliance checklist, data gaps to address, and emission reduction levers for your sector. No sales calls, no commitment.</div>
+      <div class="email-row" id="emailRow">
+        <input type="email" id="captureEmail" placeholder="your@company.com" />
+        <button class="btn-submit" onclick="submitEmail()">Send My Report</button>
+      </div>
+      <div class="success-state" id="successMsg">
+        &#10003; &nbsp; Report on its way. We'll be in touch within 24 hours.
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      All figures are indicative estimates for information purposes only. Emission factors sourced from DEFRA 2024 Greenhouse Gas Conversion Factors. Scope 3 estimates apply spend-based EEIO methodology per the GHG Protocol Corporate Value Chain Standard. These outputs do not constitute a verified carbon footprint for SECR, CSRD, or audit submission. Robotize&#8482; is a registered trademark.
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  <span class="footer-logo">ROBOTIZE</span>
+  <span>Free Emissions Estimate &nbsp;&#183;&nbsp; <a href="index.html" style="color:var(--accent-bright)">Back to main site</a></span>
+</footer>
+
+<script>
+  let currentStep = 1;
+  let selectedRating = null;
+  const dkState = {};
+
+  document.querySelectorAll('.scope-tag').forEach(t => t.addEventListener('click', () => t.classList.toggle('selected')));
+
+  function toggleDK(fieldId, toggleId) {
+    const field = document.getElementById(fieldId);
+    const toggle = document.getElementById(toggleId);
+    const nowChecked = !toggle.classList.contains('checked');
+    toggle.classList.toggle('checked', nowChecked);
+    field.classList.toggle('dk-active', nowChecked);
+    dkState[fieldId] = nowChecked;
+  }
+
+  function goToStep(n) {
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.progress-step').forEach((p, i) => {
+      p.classList.remove('active', 'done');
+      if (i + 1 < n) p.classList.add('done');
+      else if (i + 1 === n) p.classList.add('active');
+    });
+    currentStep = n;
+    document.getElementById('step' + n).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const EF = { electricity: 0.207, naturalGas: 0.183, diesel: 2.539, refrigerant: 1774, freight: 0.0001102, procurement: 0.27, businessTravel: 0.18, waste: 0.450 };
+
+  function fmt(n) {
+    if (n >= 10000) return Math.round(n / 1000) + 'k';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return Math.round(n).toLocaleString();
+  }
+
+  function getVal(id, fallback) {
+    const isDK = dkState['f-' + id];
+    const raw = parseFloat(document.getElementById(id).value);
+    const missing = isDK || isNaN(raw);
+    return { val: missing ? fallback : raw, estimated: missing };
+  }
+
+  function calculateResults() {
+    const electricity  = getVal('electricity', 0);
+    const naturalGas   = getVal('naturalGas', 0);
+    const diesel       = getVal('diesel', 0);
+    const refrigerants = getVal('refrigerants', 0);
+    const procurement  = getVal('procurement', 0);
+    const freight      = getVal('freight', 0);
+    const bizTravel    = getVal('businessTravel', 0);
+    const waste        = getVal('waste', 0);
+
+    const s1 = (naturalGas.val * 1000 * EF.naturalGas + diesel.val * EF.diesel + refrigerants.val * EF.refrigerant) / 1000;
+    const s2 = electricity.val * 1000 * EF.electricity / 1000;
+    const s3 = (procurement.val * 1000 * EF.procurement + freight.val * EF.freight + bizTravel.val * EF.businessTravel + waste.val * EF.waste * 1000) / 1000;
+    const total = s1 + s2 + s3;
+    const s3pct = total > 0 ? Math.round(s3 / total * 100) : 0;
+    const target = total * 0.58;
+
+    document.getElementById('scope1Val').textContent = fmt(s1);
+    document.getElementById('scope2Val').textContent = fmt(s2);
+    document.getElementById('scope3Val').textContent = fmt(s3) + ' tCO2e';
+    document.getElementById('totalVal').textContent = fmt(total);
+    document.getElementById('scope3Pct').textContent = s3pct + '%';
+    document.getElementById('targetVal').textContent = fmt(target) + ' tCO2e by 2030';
+
+    const gaps = [];
+    if (electricity.estimated) gaps.push('grid electricity');
+    if (naturalGas.estimated) gaps.push('natural gas');
+    if (diesel.estimated) gaps.push('diesel fuel');
+    if (procurement.estimated) gaps.push('procurement spend');
+    if (freight.estimated) gaps.push('freight data');
+    if (bizTravel.estimated) gaps.push('business travel');
+    if (waste.estimated) gaps.push('waste');
+
+    if (gaps.length > 0) {
+      document.getElementById('gapList').textContent = 'Missing or estimated: ' + gaps.join(', ') + '.';
+      document.getElementById('gapBanner').style.display = 'block';
+    }
+
+    document.getElementById('s1note').textContent = (naturalGas.estimated || diesel.estimated) ? '~ estimated' : '';
+    document.getElementById('s2note').textContent = electricity.estimated ? '~ estimated' : '';
+
+    setTimeout(() => {
+      document.getElementById('scope3Bar').style.width = s3pct + '%';
+      document.getElementById('reductionBar').style.width = '42%';
+    }, 150);
+
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.progress-step').forEach(p => { p.classList.remove('active'); p.classList.add('done'); });
+    document.getElementById('resultsCard').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    console.log('[Robotize]', { s1: Math.round(s1), s2: Math.round(s2), s3: Math.round(s3), total: Math.round(total), gaps, dkState });
+  }
+
+  function selectRating(btn, val) {
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedRating = val;
+  }
+
+  function submitEmail() {
+    const email = document.getElementById('captureEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('captureEmail').style.borderColor = 'var(--red)';
+      setTimeout(() => document.getElementById('captureEmail').style.borderColor = '', 2000);
+      return;
+    }
+    document.getElementById('emailRow').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'flex';
+    console.log('[Robotize Capture]', { email, rating: selectedRating, feedback: document.getElementById('openFeedback').value, gaps: dkState });
+  }
+</script>
+</body>
+</html>
